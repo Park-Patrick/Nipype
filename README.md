@@ -1,4 +1,4 @@
-# Nipype
+Nipype
 ========================
 
 Bash_scripts
