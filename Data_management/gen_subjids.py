@@ -1,6 +1,6 @@
 """
 Created on Aug. 24, 2016
-Upated on Aug. 24, 2016
+Upated on Aug. 25, 2016
 
 Generate array with subjids to be passed onto datagrabber
 NOTE: Directories are all hard coded
@@ -11,7 +11,7 @@ NOTE: Directories are all hard coded
 # IMPORT
 import os, getpass # Directory & user library
 
-# INPUT
+# GLOBAL VARIABLES
 user = getpass.getuser() # Grabs username of user currently logged on
 home_dir = '/home/ROBARTS/' + user + '/'
 base_dir = home_dir + 'Desktop/Test/' # Change path within ' '
