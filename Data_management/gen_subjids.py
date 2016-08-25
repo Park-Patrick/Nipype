@@ -8,15 +8,19 @@ NOTE: Directories are all hard coded
       (ie. 'EpilepsyDatabase/')
 """
 
-# IMPORT
+########
+# Import
+########
 import os, getpass # Directory & user library
 
-# GLOBAL VARIABLES
+# Global variables
 user = getpass.getuser() # Grabs username of user currently logged on
 home_dir = '/home/ROBARTS/' + user + '/'
 base_dir = home_dir + 'Desktop/Test/' # Change path within ' '
 
+#################
 # Content sorting
+#################
 listids = os.listdir(base_dir) # Store the contents of the path
 sort_listids = sorted(listids) # Sort contents alphabetically
 
