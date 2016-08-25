@@ -13,7 +13,7 @@ import os, getpass # Directory & user library
 
 # GLOBAL VARIABLES
 user = getpass.getuser() # Grabs username of user currently logged on
-home_dir = '/home/ROBARTS/' + user + '/Desktop/Test/'
+base_dir = '/home/ROBARTS/' + user + '/Desktop/Test/'
 
 # Content sorting
 listids = os.listdir(base_dir) # Store the contents of the path
