@@ -16,39 +16,25 @@ NA: TEST WITH PROPER WORKFLOW
 ########
 import getpass # Import getpass library to pull current user
 import gen_subjids # Imports list of subject ids 
-from nipype import IdentityInterface, Node, SelectFiles, Workflow
+from nipype import Node, SelectFiles
 
 # Global variables
 user = getpass.getuser() # Grabs current user name
 base_dir = '/home/ROBARTS/' + user + '/Desktop/'
 work_dir = '/home/ROBARTS/' + user + '/Desktop/Test/'
 
-##############################
-# Iterable list of subject ids
-##############################
-node_subjid = Node(IdentityInterface(fields=['subject_id']),name="subjid")
-node_subjid.iterables = [('subject_id', gen_subjids.subjid)]
-
-# DWI template - files previously imported
-templates={'dwi': work_dir + "{subject_id}/dti/uncorrected/dwi.nii.gz",
-           'bval': work_dir + "{subject_id}/dti/uncorrected/dwi.bval",
-           'bvec': work_dir + "{subject_id}/dti/uncorrected/dwi.bvec"}
-           
-# DWIGrabber (SelectFiles) node creation
-node_dwiSelect = Node(SelectFiles(templates), name="SelectFiles")
-node_dwiSelect.base_dir = base_dir
-node_dwiSelect.inputs.base_directory = work_dir
-node_dwiSelect.inputs.sort_filelist = False
-
-############################
-# Workflow to grab datafiles
-############################
-dwiGrab = Workflow(name='dwi_grabber')
-dwiGrab.base_dir = base_dir
-
-# Add nodes
-dwiGrab.add_nodes([node_subjid])
-dwiGrab.add_nodes([node_dwiSelect])
-
-# Connect nodes
-dwiGrab.connect(node_subjid, 'subject_id', node_dwiSelect, 'subject_id')
+############
+# DWIGrabber
+############
+# Template
+#templates={'dwi': work_dir + "{subject_id}/dti/uncorrected/dwi.nii.gz",
+#           'bvec': work_dir + "{subject_id}/dti/uncorrected/dwi.bvec",           
+#           'bval': work_dir + "{subject_id}/dti/uncorrected/dwi.bval",
+#           }
+#
+## Node
+#node_dwiSelect = Node(SelectFiles(templates), name="SelectFiles")
+#node_dwiSelect.base_dir = base_dir
+#node_dwiSelect.inputs.base_directory = work_dir
+#node_dwiSelect.inputs.sort_filelist = False
+#node_dwiSelect.run()
