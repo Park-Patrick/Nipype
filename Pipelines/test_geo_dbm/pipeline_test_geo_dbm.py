@@ -13,7 +13,7 @@ import nipype.interfaces.ants as ants
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.freesurfer as fsurfer
 
-import wrapper2_reg_aladin as w_reg_aladin
+import wrapper_reg_aladin as w_reg_aladin
 import wrapper_reg_f3d as w_reg_f3d
 import wrapper_reg_jacobian as w_reg_jacobian
 
@@ -25,15 +25,25 @@ import nipype.pipeline.engine as pe
 ###########################
 
 #root directory
-root_dir = '/home/ROBARTS/ppark/Documents/park_test_geo_dbm/nipype/EPI_P021/'
+root_dir = '/home/ROBARTS/ppark/Documents/geo_dbm/data/'
+
+nipype_dir = 'nipype_data/'
+
+original_dir = 'original/'
+
+data_dir = 'EPI_V064/'
+
+output_dir = '7T/Processed/7Tto3T/'
 
 #input files (not generated within pipeline)
-despot1 = 'despot1_tr90_fa18.nii.gz'
-despot1_mask = 'BrainMask.nii.gz'
+despot1 = 'Preop/Despot/despot1_tr90_fa18.nii.gz'
+despot1_mask = 'Preop/Processed/BrainMask/BrainMask.nii.gz'
 
 highres = 'MPRAGE_std_N4.nii.gz'
 highres_bet = 'MPRAGE_std_N4_bet.nii.gz'
 highres_mask = 'MPRAGE_std_N4_bet_BrainMask.nii.gz'
+
+susc_hires = '7T/Susc3D_MagEchoAvg.nii.gz'
 
 #output file names
 despot1_nuc = 'despot1_tr90_fa18_nuc.nii.gz'
@@ -68,8 +78,8 @@ resampleVS = (0.5, 0.5, 0.5)
 # wraps command N4BiasFieldCorrection #
 
 node_N4BiasFieldCorrection = pe.Node(interface=ants.N4BiasFieldCorrection(), name='node_N4BiasFieldCorrection')
-node_N4BiasFieldCorrection.inputs.input_image = root_dir + despot1
-node_N4BiasFieldCorrection.inputs.output_image = root_dir + despot1_nuc
+node_N4BiasFieldCorrection.inputs.input_image = root_dir + original_dir + data_dir + despot1
+node_N4BiasFieldCorrection.inputs.output_image = root_dir + nipype_dir + despot1_nuc
 #default save_bias set to false. Output is output_image
 #print node_N4BiasFieldCorrection.interface.cmdline
 
@@ -79,17 +89,17 @@ node_fslmath_multiply = pe.Node(interface=fsl.BinaryMaths(), name = 'node_fslmat
 # uncomment for individual node testing #
 #node_fslmath_multiply.inputs.in_file = root_dir + despot1_nuc
 #node_fslmath_multiply.inputs.in_file = node_N4BiasFieldCorrection.inputs.output_image
-node_fslmath_multiply.inputs.operand_file = root_dir + despot1_mask
+node_fslmath_multiply.inputs.operand_file = root_dir + original_dir + data_dir + despot1_mask
 node_fslmath_multiply.inputs.operation = "mul"
-node_fslmath_multiply.inputs.out_file = root_dir + despot1_nuc_masked
+node_fslmath_multiply.inputs.out_file = root_dir + nipype_dir + despot1_nuc_masked
 #print node_fslmath_multiply.interface.cmdline
 
 # wraps command fslmaths with -bin flag #
 
 node_fslmath_binarize = pe.Node(interface=fsl.UnaryMaths(), name = 'node_fslmath_binarize')
 node_fslmath_binarize.inputs.operation = 'bin'
-node_fslmath_binarize.inputs.in_file = root_dir + highres_bet
-node_fslmath_binarize.inputs.out_file = root_dir + highres_mask
+node_fslmath_binarize.inputs.in_file = root_dir + original_dir + data_dir + '7T/' + highres_bet
+node_fslmath_binarize.inputs.out_file = root_dir + nipype_dir + highres_mask 
 #print node_fslmath_binarize.interface.cmdline
 
 # wraps command mri_convert #
@@ -98,96 +108,96 @@ node_fslmath_binarize.inputs.out_file = root_dir + highres_mask
 #highres
 node_mRs = pe.Node(interface=fsurfer.Resample(), name = 'node_mRs')
 node_mRs.inputs.voxel_size = resampleVS
-node_mRs.inputs.in_file = root_dir + highres
-node_mRs.inputs.resampled_file = root_dir + resampled_highres
+node_mRs.inputs.in_file = root_dir + original_dir + data_dir + '7T/' + highres
+node_mRs.inputs.resampled_file = root_dir + nipype_dir + resampled_highres
 #print node_mRs.interface.cmdline
 
 #highres_bet
 node_mRs_highres_bet = pe.Node(interface=fsurfer.Resample(), name = 'node_mRs_highres_bet')
 node_mRs_highres_bet.inputs.voxel_size = resampleVS
-node_mRs_highres_bet.inputs.in_file = root_dir + highres_bet
-node_mRs_highres_bet.inputs.resampled_file = root_dir + resampled_highres_bet
+node_mRs_highres_bet.inputs.in_file = root_dir + original_dir + data_dir + '7T/' + highres_bet
+node_mRs_highres_bet.inputs.resampled_file = root_dir + nipype_dir + resampled_highres_bet
 #print node_mRs_highres_bet.interface.cmdline
 
 #highres_mask
 node_mRs_highres_mask = pe.Node(interface=fsurfer.Resample(), name = 'node_mRs_highres_mask')
 node_mRs_highres_mask.inputs.voxel_size = resampleVS
-node_mRs_highres_mask.inputs.in_file = root_dir + highres_mask
-node_mRs_highres_mask.inputs.resampled_file = root_dir + resampled_highres_mask
+node_mRs_highres_mask.inputs.in_file = root_dir + original_dir + data_dir + '7T/' + highres_mask
+node_mRs_highres_mask.inputs.resampled_file = root_dir + nipype_dir + resampled_highres_mask
 #print node_mRs_highres_mask.interface.cmdline
 
 #despot1
 node_mRs_despot1 = pe.Node(interface=fsurfer.Resample(), name = 'node_mRs_despot1')
 node_mRs_despot1.inputs.voxel_size = resampleVS
-node_mRs_despot1.inputs.in_file = root_dir + despot1_nuc_masked
-node_mRs_despot1.inputs.resampled_file = root_dir + resampled_despot1
+node_mRs_despot1.inputs.in_file = root_dir + original_dir + data_dir + output_dir + despot1_nuc_masked
+node_mRs_despot1.inputs.resampled_file = root_dir + nipype_dir + resampled_despot1
 #print node_mRs_despot1.interface.cmdline
 
 #despot1_mask
 node_mRs_despot1_mask = pe.Node(interface=fsurfer.Resample(), name = 'node_mRs_despot1_mask')
 node_mRs_despot1_mask.inputs.voxel_size = resampleVS
-node_mRs_despot1_mask.inputs.in_file = root_dir + despot1_mask
-node_mRs_despot1_mask.inputs.resampled_file = root_dir + resampled_despot1_mask
+node_mRs_despot1_mask.inputs.in_file = root_dir + original_dir + data_dir + despot1_mask
+node_mRs_despot1_mask.inputs.resampled_file = root_dir + nipype_dir + resampled_despot1_mask
 #print node_mRs_despot1_mask.interface.cmdline
 
 #niftyReg rigid aladin
 node_reg_aladin = pe.Node(interface = w_reg_aladin.reg_aladin(), name = 'node_reg_aladin')
-node_reg_aladin.inputs.reference_img = root_dir + resampled_despot1
-node_reg_aladin.inputs.floating_img = root_dir + resampled_highres_bet
+node_reg_aladin.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_reg_aladin.inputs.floating_img = root_dir + nipype_dir + resampled_highres_bet
 node_reg_aladin.inputs.option_rigOnly = True
-node_reg_aladin.inputs.option_affine = root_dir + rigid_xfm
-node_reg_aladin.inputs.resampled_image = root_dir + rigid_nii
+node_reg_aladin.inputs.option_affine = root_dir + nipype_dir + rigid_xfm
+node_reg_aladin.inputs.resampled_image = root_dir + nipype_dir + rigid_nii
 #print node_reg_aladin.interface.cmdline
 
 #niftyReg non rigid aladin
 node_reg_aladin2 = pe.Node(interface=w_reg_aladin.reg_aladin(), name = 'node_reg_aladin2')
-node_reg_aladin2.inputs.reference_img = root_dir + resampled_despot1
-node_reg_aladin2.inputs.floating_img = root_dir + resampled_highres_bet
-node_reg_aladin2.inputs.input_affine_trans = root_dir + rigid_xfm
-node_reg_aladin2.inputs.option_affine = root_dir + affine_xfm
-node_reg_aladin2.inputs.resampled_image = root_dir + affine_nii
+node_reg_aladin2.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_reg_aladin2.inputs.floating_img = root_dir + nipype_dir + resampled_highres_bet
+node_reg_aladin2.inputs.input_affine_trans = root_dir + nipype_dir + rigid_xfm
+node_reg_aladin2.inputs.option_affine = root_dir + nipype_dir + affine_xfm
+node_reg_aladin2.inputs.resampled_image = root_dir + nipype_dir + affine_nii
 #print node_reg_aladin2.interface.cmdline
 
 #niftyReg f3d
 node_reg_f3d = pe.Node(interface=w_reg_f3d.reg_f3d(), name = 'node_reg_f3d')
-node_reg_f3d.inputs.reference_img = root_dir + resampled_despot1
-node_reg_f3d.inputs.floating_img = root_dir + resampled_highres_bet
-node_reg_f3d.inputs.option_affine = root_dir + affine_xfm
-node_reg_f3d.inputs.control_point_grid = root_dir + nlin_cpp
-node_reg_f3d.inputs.resampled_img = root_dir + nlin_nii
+node_reg_f3d.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_reg_f3d.inputs.floating_img = root_dir + nipype_dir + resampled_highres_bet
+node_reg_f3d.inputs.option_affine = root_dir + nipype_dir + affine_xfm
+node_reg_f3d.inputs.control_point_grid = root_dir + nipype_dir + nlin_cpp
+node_reg_f3d.inputs.resampled_img = root_dir + nipype_dir + nlin_nii
 #print node_reg_f3d.interface.cmdline
 
 #niftyReg jacobian Log
 node_jacobian_log = pe.Node(interface=w_reg_jacobian.reg_jacobian(), name = 'node_jacobian_log')
-node_jacobian_log.inputs.reference_img = root_dir + resampled_despot1
-node_jacobian_log.inputs.control_point_grid = root_dir + nlin_cpp
-node_jacobian_log.inputs.option_affine = root_dir + affine_xfm    
-node_jacobian_log.inputs.jacobianLog = root_dir + log_jacobian
+node_jacobian_log.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_jacobian_log.inputs.control_point_grid = root_dir + nipype_dir + nlin_cpp
+node_jacobian_log.inputs.option_affine = root_dir + nipype_dir + affine_xfm
+node_jacobian_log.inputs.jacobianLog = root_dir + nipype_dir + log_jacobian
 #print node_jacobian_log.interface.cmdline
 
 #niftyReg jacobian matrix
 node_jacobian_matrix = pe.Node(interface=w_reg_jacobian.reg_jacobian(), name = 'node_jacobian_matrix')
-node_jacobian_matrix.inputs.reference_img = root_dir + resampled_despot1
-node_jacobian_matrix.inputs.control_point_grid = root_dir + nlin_cpp
-node_jacobian_matrix.inputs.option_affine = root_dir + affine_xfm    
-node_jacobian_matrix.inputs.jacobianMatrix = root_dir + mat_jacobian
+node_jacobian_matrix.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_jacobian_matrix.inputs.control_point_grid = root_dir + nipype_dir + nlin_cpp
+node_jacobian_matrix.inputs.option_affine = root_dir + nipype_dir + affine_xfm    
+node_jacobian_matrix.inputs.jacobianMatrix = root_dir + nipype_dir + mat_jacobian
 #print node_jacobian_matrix.interface.cmdline
 
 #niftyReg jacobian determinant
 node_jacobian_dtm = pe.Node(interface=w_reg_jacobian.reg_jacobian(), name = 'node_jacobian_dtm')
-node_jacobian_log.inputs.reference_img = root_dir + resampled_despot1
-node_jacobian_log.inputs.control_point_grid = root_dir + nlin_cpp
-node_jacobian_log.inputs.option_affine = root_dir + affine_xfm    
-node_jacobian_log.inputs.jacobianDeterminant = root_dir + jacobian
-#print node_jacobian_log.interface.cmdline
+node_jacobian_dtm.inputs.reference_img = root_dir + nipype_dir + resampled_despot1
+node_jacobian_dtm.inputs.control_point_grid = root_dir + nipype_dir +  nlin_cpp
+node_jacobian_dtm.inputs.option_affine = root_dir + nipype_dir + affine_xfm    
+node_jacobian_dtm.inputs.jacobianDeterminant = root_dir + nipype_dir + jacobian
+#print node_jacobian_dtm.interface.cmdline
 
 ####################
 # Create workflows #
 ####################
 #TODO: break pipeline down into sub-workflows
 
-test_geo_workflow2 = pe.Workflow(name='test_geo_workflow2')
-test_geo_workflow2.base_dir = '.'
+test_geo_workflow = pe.Workflow(name='test_geo_workflow')
+test_geo_workflow.base_dir = '.'
 
 #############
 # Add nodes #
@@ -195,20 +205,20 @@ test_geo_workflow2.base_dir = '.'
 #TODO: can be simplified to one line per sub-workflow
 
 
-test_geo_workflow2.add_nodes([node_fslmath_binarize])
-test_geo_workflow2.add_nodes([node_fslmath_multiply])
-test_geo_workflow2.add_nodes([node_jacobian_dtm])
-test_geo_workflow2.add_nodes([node_jacobian_log])
-test_geo_workflow2.add_nodes([node_jacobian_matrix])
-test_geo_workflow2.add_nodes([node_mRs])
-test_geo_workflow2.add_nodes([node_mRs_despot1])
-test_geo_workflow2.add_nodes([node_mRs_despot1_mask])
-test_geo_workflow2.add_nodes([node_mRs_highres_bet])
-test_geo_workflow2.add_nodes([node_mRs_highres_mask])
-test_geo_workflow2.add_nodes([node_N4BiasFieldCorrection])
-test_geo_workflow2.add_nodes([node_reg_aladin])
-test_geo_workflow2.add_nodes([node_reg_aladin2])
-test_geo_workflow2.add_nodes([node_reg_f3d])
+test_geo_workflow.add_nodes([node_fslmath_binarize])
+test_geo_workflow.add_nodes([node_fslmath_multiply])
+test_geo_workflow.add_nodes([node_jacobian_dtm])
+test_geo_workflow.add_nodes([node_jacobian_log])
+test_geo_workflow.add_nodes([node_jacobian_matrix])
+test_geo_workflow.add_nodes([node_mRs])
+test_geo_workflow.add_nodes([node_mRs_despot1])
+test_geo_workflow.add_nodes([node_mRs_despot1_mask])
+test_geo_workflow.add_nodes([node_mRs_highres_bet])
+test_geo_workflow.add_nodes([node_mRs_highres_mask])
+test_geo_workflow.add_nodes([node_N4BiasFieldCorrection])
+test_geo_workflow.add_nodes([node_reg_aladin])
+test_geo_workflow.add_nodes([node_reg_aladin2])
+test_geo_workflow.add_nodes([node_reg_f3d])
 
 
 #################
@@ -216,45 +226,45 @@ test_geo_workflow2.add_nodes([node_reg_f3d])
 #################
 #TODO: can be simplified to one line per sub-workflow
 
-test_geo_workflow2.connect(node_N4BiasFieldCorrection, 'output_image', node_fslmath_multiply, 'in_file')
-test_geo_workflow2.connect(node_fslmath_multiply, 'out_file', node_mRs_despot1, 'in_file')
-test_geo_workflow2.connect(node_mRs_highres_bet, 'resampled_file', node_reg_aladin, 'floating_img')
-test_geo_workflow2.connect(node_mRs_highres_bet, 'resampled_file', node_reg_aladin2, 'floating_img')
-test_geo_workflow2.connect(node_reg_aladin, 'output_affine_transformation', node_reg_aladin2, 'input_affine_trans')
+test_geo_workflow.connect(node_N4BiasFieldCorrection, 'output_image', node_fslmath_multiply, 'in_file')
+test_geo_workflow.connect(node_fslmath_multiply, 'out_file', node_mRs_despot1, 'in_file')
+test_geo_workflow.connect(node_mRs_highres_bet, 'resampled_file', node_reg_aladin, 'floating_img')
+test_geo_workflow.connect(node_mRs_highres_bet, 'resampled_file', node_reg_aladin2, 'floating_img')
+test_geo_workflow.connect(node_reg_aladin, 'output_affine_transformation', node_reg_aladin2, 'input_affine_trans')
 #reference images
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_reg_aladin, 'reference_img')
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_reg_aladin2, 'reference_img')
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_reg_f3d, 'reference_img')
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_jacobian_dtm, 'reference_img')
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_jacobian_log, 'reference_img')
-test_geo_workflow2.connect(node_mRs_despot1, 'resampled_file', node_jacobian_matrix, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_reg_aladin, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_reg_aladin2, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_reg_f3d, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_jacobian_dtm, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_jacobian_log, 'reference_img')
+test_geo_workflow.connect(node_mRs_despot1, 'resampled_file', node_jacobian_matrix, 'reference_img')
 
-test_geo_workflow2.connect(node_mRs_highres_bet, 'resampled_file', node_reg_f3d, 'floating_img')
-test_geo_workflow2.connect(node_reg_aladin2, 'output_affine_transformation', node_reg_f3d, 'option_affine')
+test_geo_workflow.connect(node_mRs_highres_bet, 'resampled_file', node_reg_f3d, 'floating_img')
+test_geo_workflow.connect(node_reg_aladin2, 'output_affine_transformation', node_reg_f3d, 'option_affine')
 
-test_geo_workflow2.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_log, 'control_point_grid')
-test_geo_workflow2.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_matrix, 'control_point_grid')
-test_geo_workflow2.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_dtm, 'control_point_grid')
+test_geo_workflow.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_log, 'control_point_grid')
+test_geo_workflow.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_matrix, 'control_point_grid')
+test_geo_workflow.connect(node_reg_f3d, 'outfile_cpp', node_jacobian_dtm, 'control_point_grid')
 
-test_geo_workflow2.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_log, 'option_affine')
-test_geo_workflow2.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_matrix, 'option_affine')
-test_geo_workflow2.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_dtm, 'option_affine')
+test_geo_workflow.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_log, 'option_affine')
+test_geo_workflow.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_matrix, 'option_affine')
+test_geo_workflow.connect(node_reg_aladin2, 'output_affine_transformation', node_jacobian_dtm, 'option_affine')
 
 ##############
 # Draw graph #
 ##############
 
 #simple
-test_geo_workflow2.write_graph()
+test_geo_workflow.write_graph()
 
 #detailed
-#test_geo_workflow2.write_graph('test_geo_workflow2_graph.dot', graph2use = 'exec')
+test_geo_workflow.write_graph('test_geo_workflow_graph.dot', graph2use = 'exec')
 
 #######
 # Run #
 #######
 
-test_geo_workflow2.run()
+test_geo_workflow.run()
 
 
 
